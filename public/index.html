@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Configuração do Bot</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #075e54;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        textarea {
+            width: 90%;
+            height: 80px;
+            margin-top: 5px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            background-color: #25d366;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #128c7e;
+        }
+
+        #status {
+            text-align: center;
+            margin-top: 10px;
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+
+        <h1>🤖 Configurar Bot WhatsApp</h1>
+
+        <h2>Caso o cliente só envie um arquivo:</h2>
+
+        <label>Mensagem de Saudação (Oi/Olá)</label>
+        <textarea id="saudacao_arquivo"></textarea>
+
+        <label>Menu de Opções</label>
+        <textarea id="menu_arquivo"></textarea>
+
+        <h2>Caso o cliente envie uma mensagem:</h2>
+
+        <label>Mensagem de Saudação (Oi/Olá):</label>
+        <textarea id="saudacao"></textarea>
+
+        <label>Menu de Opções:</label>
+        <textarea id="menu"></textarea>
+
+        <h2>Respostas ao menu</h2>
+
+        <label>Descreva a tabela de preços:</label>
+        <textarea id="precos"></textarea>
+
+        <label>Resposta a solicitação de suporte</label>
+        <textarea id="suporte"></textarea>
+
+        <button onclick="salvar()">Salvar Alterações</button>
+        <p id="status"></p>
+
+    </div>
+
+    <script>
+        // Carregar dados ao abrir a página
+        fetch('/api/config')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('saudacao_arquivo').value = data.saudacao_arquivo;
+                document.getElementById('menu_arquivo').value = data.menu_arquivo;
+                document.getElementById('saudacao').value = data.saudacao;
+                document.getElementById('menu').value = data.menu;
+                document.getElementById('precos').value = data.preco;
+                document.getElementById('suporte').value = data.suporte;
+            });
+
+        // Enviar dados ao clicar em Salvar
+        function salvar() {
+            const dados = {
+                saudacao_arquivo: document.getElementById('saudacao_arquivo').value,
+                menu_arquivo: document.getElementById('menu_arquivo').value,
+                saudacao: document.getElementById('saudacao').value,
+                menu: document.getElementById('menu').value,
+                preco: document.getElementById('precos').value,
+                suporte: document.getElementById('suporte').value
+            };
+
+            fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            }).then(() => {
+                const status = document.getElementById('status');
+                status.innerText = "Salvo com sucesso!";
+                setTimeout(() => status.innerText = "", 3000);
+            });
+        }
+    </script>
+
+</body>
+
+</html>
