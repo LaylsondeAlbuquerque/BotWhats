@@ -4,7 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
-const open = require('open');
+// const open = require('open');
 
 // --- CONFIGURAÇÃO INICIAL ---
 const app = express();
@@ -61,28 +61,68 @@ client.on('ready', () => {
     console.log('TUDO PRONTO! O Bot está conectado.');
 });
 
-client.on('message', message => {
-    const config = carregarConfig(); // Lê a configuração mais recente a cada mensagem
+userStages = {}; // Para controlar em qual etapa do atendimento o usuário está
+userTimers = {}; // Para controlar o tempo de inatividade
 
-    // Lógica simples de resposta (pode ser melhorada)
-    if (message.hasMedia) {
-        client.sendMessage(message.from, config.saudacao_arquivo);
-        client.sendMessage(message.from, config.menu_arquivo);
-    }
-    else {
-        client.sendMessage(message.from, config.saudacao);
-        client.sendMessage(message.from, config.menu);
-    }
+const TEMPO_EXPIRACAO = 600000; // 10 minutos
+
+// client.on('message', async message => {
+
+//     if (message.from.includes('@g.us') || message.isStatus) return; // Ignora mensagens de grupos e status
+
+//     const idUsuario = message.from;
+//     const msg = message.body.toLowerCase();
+
+//     if (userStages[idUsuario]) {
+//         clearTimeout(userTimers[idUsuario]); // Limpa o timer toda vez que o usuário interage
+//     }
+
+//     userTimers[idUsuario] = setTimeout(() => {
+//         if (userStages[idUsuario]) {
+//             client.sendMessage(idUsuario, "⚠️ *Atendimento encerrado por inatividade.* \n Envie 'Oi' para começar de novo.")
+//             delete userStages[idUsuario];
+//         }
+//     })
+
+//     // Lógica de resposta
+//     if (message.hasMedia) {
+//         client.sendMessage(message.from, config.saudacao_arquivo);
+//         client.sendMessage(message.from, config.menu_arquivo);
+//     }
+//     else {
+//         client.sendMessage(message.from, config.saudacao);
+//         client.sendMessage(message.from, config.menu);
+//     }
     
-    // Exemplo de resposta para opções do menu
-    if (message.body === '1') {
-        client.sendMessage(message.from, "Nossos preços começam em R$ 50,00.");
-    }
-});
+//     // Resposta para opções do menu
+//     if (message.body === '1') {
+//         if (message.hasMedia) {
+//             client.sendMessage(message.from, config.preco_arquivo);
+//         } else {
+//         client.sendMessage(message.from, config.preco);
+//         }
+//     }
+//     if (message.body === '2') {
+//         if (message.hasMedia) {
+//             client.sendMessage(message.from, config.suporte_arquivo);
+//         } else {
+//         client.sendMessage(message.from, config.suporte);
+//         }
+//     }
+// });
 
 // --- INICIALIZAÇÃO ---
 client.initialize();
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Painel de Configuração rodando em: http://localhost:${PORT}`);
+    
+    // Tenta abrir o navegador automaticamente usando importação dinâmica
+    try {
+        const open = (await import('open')).default;
+        await open(`http://localhost:${PORT}`);
+        console.log("Navegador aberto com sucesso!");
+    } catch (erro) {
+        console.error("Não foi possível abrir o navegador automaticamente:", erro.message);
+    }
 });

@@ -1,7 +1,8 @@
 @echo off
-title Bot WhatsApp - NAO FECHE ESSA JANELA
+title Bot WhatsApp - Portatil
 echo Iniciando o sistema...
-echo Abra http://localhost:3000 para configurar as mensagens.
+echo Abra http://localhost:3000 para configurar.
 echo.
-node index.js
+.\node.exe index.js
+
 pause

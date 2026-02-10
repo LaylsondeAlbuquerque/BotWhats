@@ -13,6 +13,12 @@
             background-color: #f0f2f5;
         }
 
+        div {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 8px 0px 8px 0px;
+        }
+
         .card {
             background: white;
             padding: 20px;
@@ -67,61 +73,164 @@
 
 <body>
 
-    <div class="card">
+    <header>
 
         <h1>🤖 Configurar Bot WhatsApp</h1>
 
-        <h2>Caso o cliente só envie um arquivo:</h2>
+    </header>
 
-        <label>Mensagem de Saudação (Oi/Olá)</label>
-        <textarea id="saudacao_arquivo"></textarea>
+    <main class="card">
 
-        <label>Menu de Opções</label>
-        <textarea id="menu_arquivo"></textarea>
+        <div>
 
-        <h2>Caso o cliente envie uma mensagem:</h2>
+            <h2>Dias e horas de funcionamento</h2>
 
-        <label>Mensagem de Saudação (Oi/Olá):</label>
-        <textarea id="saudacao"></textarea>
+            <h3>Dias da semana</h3>
 
-        <label>Menu de Opções:</label>
-        <textarea id="menu"></textarea>
+            <fieldset id="group-days" onchange="getSelectedDays()">
 
-        <h2>Respostas ao menu</h2>
+                <legend>Dias de Atendimento</legend>
 
-        <label>Descreva a tabela de preços:</label>
-        <textarea id="precos"></textarea>
+                <label><input type="checkbox" name="dias" value="0"> Domingo</label>
+                <label><input type="checkbox" name="dias" value="1"> Segunda</label>
+                <label><input type="checkbox" name="dias" value="2"> Terça</label>
+                <label><input type="checkbox" name="dias" value="3"> Quarta</label>
+                <label><input type="checkbox" name="dias" value="4"> Quinta</label>
+                <label><input type="checkbox" name="dias" value="5"> Sexta</label>
+                <label><input type="checkbox" name="dias" value="6"> Sábado</label>
 
-        <label>Resposta a solicitação de suporte</label>
-        <textarea id="suporte"></textarea>
+            </fieldset>
 
-        <button onclick="salvar()">Salvar Alterações</button>
-        <p id="status"></p>
+            <h3>Horário de funcionamento</h3>
 
-    </div>
+            <label>Início</label>
+            <input type="time" id="inicio">
+
+            <label>Fim</label>
+            <input type="time" id="fim">
+
+            <h3>Horário de almoço</h3>
+
+            <label>Início</label>
+            <input type="time" id="almocoInicio">
+
+            <label>Fim</label>
+            <input type="time" id="almocoFim">
+
+        </div>
+
+        <div>
+
+            <h2>Caso o cliente só envie um arquivo:</h2>
+
+            <label>Mensagem de Saudação (Oi/Olá)</label>
+            <textarea id="saudacao_arquivo"></textarea>
+
+            <label>Menu de Opções</label>
+            <textarea id="menu_arquivo"></textarea>
+
+            <h3>Respostas ao menu</h3>
+
+            <label>Opção um:</label>
+            <textarea id="opUmArc"></textarea>
+
+            <label>Opção dois:</label>
+            <textarea id="opDoisArc"></textarea>
+
+        </div>
+
+        <div>
+
+
+            <h2>Caso o cliente envie uma mensagem:</h2>
+
+            <label>Mensagem de Saudação (Oi/Olá):</label>
+            <textarea id="saudacao"></textarea>
+
+            <label>Menu de Opções:</label>
+            <textarea id="menu"></textarea>
+
+            <h3>Respostas ao menu</h3>
+
+            <label>Opção um:</label>
+            <textarea id="opUm"></textarea>
+
+            <label>Opção dois:</label>
+            <textarea id="opDois"></textarea>
+
+            <button onclick="salvar()">Salvar Alterações</button>
+            <p id="status"></p>
+
+        </div>
+
+    </main>
 
     <script>
+
+        // Função para criar array com os dias selecionados
+        function getSelectedDays() {
+            const checkboxes = document.querySelectorAll('input[name="dias"]:checked');
+            const dias = Array.from(checkboxes).map(cb => cb.value);
+            console.log("Dias atualizados:", dias);
+            return dias;
+        }
+
         // Carregar dados ao abrir a página
         fetch('/api/config')
             .then(res => res.json())
             .then(data => {
+                // Preencher os textos normais
                 document.getElementById('saudacao_arquivo').value = data.saudacao_arquivo;
                 document.getElementById('menu_arquivo').value = data.menu_arquivo;
                 document.getElementById('saudacao').value = data.saudacao;
                 document.getElementById('menu').value = data.menu;
-                document.getElementById('precos').value = data.preco;
-                document.getElementById('suporte').value = data.suporte;
+                // Preencher as respostas opcionais (usei || '' para evitar erro se estiver vazio)
+                document.getElementById('opUmArc').value = data.opUmArc || '';
+                document.getElementById('opDoisArc').value = data.opDoisArc || '';
+                document.getElementById('opUm').value = data.opUm || '';
+                document.getElementById('opDois').value = data.opDois || '';
+
+                // Marcas as horas de funcionamento
+                document.getElementById('inicio').value = data.horarioInicio || '';
+                document.getElementById('fim').value = data.horarioFim || '';
+                document.getElementById('almocoInicio').value = data.almocoInicio || '';
+                document.getElementById('almocoFim').value = data.almocoFim || '';
+
+                // Marcar os dias de atendimento
+                if (data.diasFuncionamento) {
+                    data.diasFuncionamento.forEach(dia => {
+                        // Procura o checkbox com esse valor e marca ele
+                        const checkbox = document.querySelector(`input[name="dias"][value="${dia}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                }
             });
 
         // Enviar dados ao clicar em Salvar
         function salvar() {
+
+            const diasSelecionados = getSelectedDays();
+
             const dados = {
+
+                // textos normais
                 saudacao_arquivo: document.getElementById('saudacao_arquivo').value,
                 menu_arquivo: document.getElementById('menu_arquivo').value,
                 saudacao: document.getElementById('saudacao').value,
                 menu: document.getElementById('menu').value,
-                preco: document.getElementById('precos').value,
-                suporte: document.getElementById('suporte').value
+                // Respostas opcionais
+                opUmArc: document.getElementById('opUmArc').value,
+                opDoisArc: document.getElementById('opDoisArc').value,
+                opUm: document.getElementById('opUm').value,
+                opDois: document.getElementById('opDois').value,
+                // Horários de funcionamento
+                horarioInicio: document.getElementById('inicio').value,
+                horarioFim: document.getElementById('fim').value,
+                almocoInicio: document.getElementById('almocoInicio').value,
+                almocoFim: document.getElementById('almocoFim').value,
+                // Dias de funcionamento
+                diasFuncionamento: diasSelecionados
+                
             };
 
             fetch('/api/config', {
