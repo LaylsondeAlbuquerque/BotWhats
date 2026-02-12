@@ -1,0 +1,15 @@
+{
+  "saudacao_arquivo": "Olá! Que bom te ter aqui! Como posso te ajudar",
+  "menu_arquivo": "1. Já estou na gráfica\n2. Ainda vou chegar ai",
+  "saudacao": "Olá! Como posso ajudar?",
+  "menu": "1. Preços\n2. Suporte",
+  "opUmArc": "Ótimo, nosso funcionário irá lhe atender.",
+  "opDoisArc": "Essa é nossa tabela de preço:\n\n\nSó podemos começar a impressão mediante pagamento prévio.",
+  "opUm": "Tabela de Preços",
+  "opDois": "Por favor, aguarde, você será atendido por um de nossos atendentes em breve.",
+  "horarioInicio": "08:00",
+  "horarioFim": "18:00",
+  "almocoInicio": "12:00",
+  "almocoFim": "14:00",
+  "diasFuncionamento": ["1", "2", "3", "4", "5"]
+}

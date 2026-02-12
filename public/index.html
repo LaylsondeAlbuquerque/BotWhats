@@ -7,13 +7,13 @@
     <style>
         body {
             font-family: sans-serif;
-            max-width: 600px;
+            max-width: 900px;
             margin: 40px auto;
             padding: 20px;
             background-color: #f0f2f5;
         }
 
-        div {
+        details {
             border: 1px solid #ddd;
             padding: 20px;
             margin: 8px 0px 8px 0px;
@@ -75,15 +75,57 @@
 
     <header>
 
-        <h1>🤖 Configurar Bot WhatsApp</h1>
+        <h1> Configurar Bot WhatsApp</h1>
 
     </header>
 
     <main class="card">
 
-        <div>
+        <!-- Categoria dos produtos -->
+        <details open>
+            <summary> Definição de Categorias</summary>
+            <div class="conteudo-interno">
+                <label>Liste as categorias separadas por vírgula:</label>
+                <textarea id="categorias-globais" oninput="atualizarTodosDropdowns()"
+                    placeholder="Ex: Xerox, Impressão, Plastificação" rows="3" style="width: 100%;"></textarea>
+            </div>
+        </details>
 
-            <h2>Dias e horas de funcionamento</h2>
+        <!-- Tabela de produtos -->
+        <details>
+
+            <summary>Tabela de Produtos</summary>
+
+            <div id="lista-produtos"></div>
+
+            <button type="button" onclick="adicionarProduto()" style="background: #007bff; margin-top: 10px;">
+                + Adicionar Produto
+            </button>
+
+            <template id="template-produto">
+                <div class="linha-produto" style="display: flex; gap: 10px; margin-bottom: 10px;">
+
+                    <input type="text" class="input-codigo" placeholder="ID">
+
+                    <select class="input-categoria-select" style="flex: 1;">
+                        <option value="">Selecione...</option>
+                    </select>
+
+                    <input type="text" class="input-nome" placeholder="Nome">
+
+                    <input type="text" class="input-preco" placeholder="0,00">
+
+                    <button type="button" onclick="removerLinha(this)" style="background-color: red; width: 40px;">X</button>
+
+                </div>
+            </template>
+
+        </details>
+
+        <!-- dias e horários de funcionamento -->
+        <details>
+
+            <summary>Dias e horas de funcionamento</summary>
 
             <h3>Dias da semana</h3>
 
@@ -117,11 +159,12 @@
             <label>Fim</label>
             <input type="time" id="almocoFim">
 
-        </div>
+        </details>
 
-        <div>
+        <!-- respostas ao cliente que enviou arquivo -->
+        <details>
 
-            <h2>Caso o cliente só envie um arquivo:</h2>
+            <summary>Caso o cliente envie um arquivo:</summary>
 
             <label>Mensagem de Saudação (Oi/Olá)</label>
             <textarea id="saudacao_arquivo"></textarea>
@@ -137,12 +180,13 @@
             <label>Opção dois:</label>
             <textarea id="opDoisArc"></textarea>
 
-        </div>
+        </details>
 
-        <div>
+        <!-- respostas ao cliente que enviou mensagem -->
+        <details>
 
 
-            <h2>Caso o cliente envie uma mensagem:</h2>
+            <summary>Caso o cliente envie uma mensagem:</summary>
 
             <label>Mensagem de Saudação (Oi/Olá):</label>
             <textarea id="saudacao"></textarea>
@@ -158,14 +202,103 @@
             <label>Opção dois:</label>
             <textarea id="opDois"></textarea>
 
-            <button onclick="salvar()">Salvar Alterações</button>
-            <p id="status"></p>
 
-        </div>
+        </details>
+
+        <button onclick="salvar()">Salvar Alterações</button>
+        <p id="status"></p>
+
+
 
     </main>
 
     <script>
+
+        /*
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        FUNÇÕES PARA AS CATEGORIAS DOS PRODUTOS
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        */
+
+        // Função para atualizar os dropdowns de categoria em cada linha de produto
+        function atualizarTodosDropdowns() {
+            // 1. Pega as categorias escritas e limpa (tira espaços e vazios)
+            const texto = document.getElementById('categorias-globais').value;
+            const categorias = texto.split(',').map(c => c.trim()).filter(c => c !== '');
+
+            // 2. Busca todos os selects de produtos que existem na tela
+            const selects = document.querySelectorAll('.input-categoria-select');
+
+            // 3. Atualiza um por um
+            selects.forEach(select => {
+                const valorSelecionadoAntes = select.value; // Salva o que o usuário já tinha escolhido
+
+                // Limpa o select (mantendo só a opção padrão)
+                select.innerHTML = '<option value="">Selecione...</option>';
+
+                // Adiciona as novas opções
+                categorias.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.innerText = cat;
+                    select.appendChild(option);
+                });
+
+                // Tenta selecionar de volta o que estava antes (se a categoria ainda existir)
+                select.value = valorSelecionadoAntes;
+            });
+        }
+
+
+        /*
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        FUNÇÕES PARA A TABELA DE PRODUTOS
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        */
+
+        // Função para adicionar uma nova linha de produto
+        function adicionarProduto(codigo = '', nome = '', preco = '', categoriaSalva = '') {
+            // Get dos elementos necessários
+            const lista = document.getElementById('lista-produtos');
+            const template = document.getElementById('template-produto');
+
+            // Clona o template
+            const clone = template.content.cloneNode(true);
+            // Preenche os valores
+            clone.querySelector('.input-codigo').value = codigo;
+            clone.querySelector('.input-nome').value = nome;
+            clone.querySelector('.input-preco').value = preco;
+
+            // Pega as categorias atuais do textarea global
+            const textoCategorias = document.getElementById('categorias-globais').value;
+            const categorias = textoCategorias.split(',').map(c => c.trim()).filter(c => c !== '');
+
+            // Cria o select de categoria
+            const select = clone.querySelector('.input-categoria-select');
+            // Adiciona as opções de categoria
+            categorias.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.innerText = cat;
+                select.appendChild(option);
+            });
+            // Se houver, seleciona a categoria salva
+            if (categoriaSalva) {
+                select.value = categoriaSalva;
+            }
+
+            lista.appendChild(clone);
+        }
+
+        function removerLinha(botao) {
+            botao.parentElement.remove();
+        }
+
+        /*
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        FUNÇÕES PARA DIAS E HORÁRIOS DE FUNCIONAMENTO
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        */
 
         // Função para criar array com os dias selecionados
         function getSelectedDays() {
@@ -174,6 +307,12 @@
             console.log("Dias atualizados:", dias);
             return dias;
         }
+
+        /*
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        FUNÇÕES PARA CARREGAR OS DADOS QUANDO ABRIR O SITE E PARA SALVAR OS DADOS
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+       */
 
         // Carregar dados ao abrir a página
         fetch('/api/config')
@@ -204,12 +343,47 @@
                         if (checkbox) checkbox.checked = true;
                     });
                 }
+
+                // Preencher as categorias globais
+                document.getElementById('categorias-globais').value = data.categoriasGlobais ? data.categoriasGlobais.join(', ') : '';
+
+                // Carregar a tabela de produtos
+                const lista = document.getElementById('lista-produtos');
+                lista.innerHTML = ''; // Limpa a lista
+                if (data.produtos && data.produtos.length > 0) {
+                    data.produtos.forEach(produto => {
+                        const precoVisto = produto.preco.toString().replace('.', ','); // Converte para string e troca ponto por vírgula
+                        adicionarProduto(produto.id, produto.nome, precoVisto, produto.categoria); // Adiciona a linha com os dados do produto
+                    });
+                } else {
+                    // Se não tiver produtos, adiciona uma linha vazia
+                    adicionarProduto();
+                }
             });
 
         // Enviar dados ao clicar em Salvar
         function salvar() {
 
             const diasSelecionados = getSelectedDays();
+
+            // Obter os dados da tabela de produtos
+            const lista = document.querySelectorAll('.linha-produto');
+            const arrayProdutos = [];
+
+            lista.forEach(linha => {
+                const codigo = linha.querySelector('.input-codigo').value;
+                const nome = linha.querySelector('.input-nome').value;
+                const precodigitado = linha.querySelector('.input-preco').value;
+                const preco = parseFloat(precodigitado.replace(',', '.')); // Converte para número, considerando vírgula como decimal
+                const categoria = linha.querySelector('.input-categoria-select').value;
+                if (codigo && nome && preco && categoria) { // Só adiciona se tiver todos os campos preenchidos
+                    arrayProdutos.push({ id: codigo, nome: nome, preco: preco, categoria: categoria });
+                }
+            });
+
+            // Obter as categorias globais
+            const textoCategorias = document.getElementById('categorias-globais').value;
+            const categoriasGlobais = textoCategorias.split(',').map(c => c.trim()).filter(c => c !== '');
 
             const dados = {
 
@@ -229,9 +403,20 @@
                 almocoInicio: document.getElementById('almocoInicio').value,
                 almocoFim: document.getElementById('almocoFim').value,
                 // Dias de funcionamento
-                diasFuncionamento: diasSelecionados
-                
+                diasFuncionamento: diasSelecionados,
+                // Tabela de produtos
+                produtos: arrayProdutos,
+                // Categorias globais
+                categoriasGlobais: categoriasGlobais,
+
+
             };
+
+            /*
+            =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+            FUNÇÃO PARA ENVIAR OS DADOS PARA O BACKEND
+            =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+            */
 
             fetch('/api/config', {
                 method: 'POST',
