@@ -82,11 +82,11 @@
     <main class="card">
 
         <!-- Categoria dos produtos -->
-        <details open>
+        <details>
             <summary> Definição de Categorias</summary>
             <div class="conteudo-interno">
                 <label>Liste as categorias separadas por vírgula:</label>
-                <textarea id="categorias-globais" oninput="atualizarTodosDropdowns()"
+                <textarea id="categorias-produtos" oninput="atualizarTodosDropdowns()"
                     placeholder="Ex: Xerox, Impressão, Plastificação" rows="3" style="width: 100%;"></textarea>
             </div>
         </details>
@@ -161,46 +161,42 @@
 
         </details>
 
-        <!-- respostas ao cliente que enviou arquivo -->
+        <!-- Inicial-menu -->
         <details>
 
-            <summary>Caso o cliente envie um arquivo:</summary>
-
-            <label>Mensagem de Saudação (Oi/Olá)</label>
-            <textarea id="saudacao_arquivo"></textarea>
-
-            <label>Menu de Opções</label>
-            <textarea id="menu_arquivo"></textarea>
-
-            <h3>Respostas ao menu</h3>
-
-            <label>Opção um:</label>
-            <textarea id="opUmArc"></textarea>
-
-            <label>Opção dois:</label>
-            <textarea id="opDoisArc"></textarea>
-
-        </details>
-
-        <!-- respostas ao cliente que enviou mensagem -->
-        <details>
-
-
-            <summary>Caso o cliente envie uma mensagem:</summary>
+            <summary>Resposta a primeira mensagem do cliente:</summary>
 
             <label>Mensagem de Saudação (Oi/Olá):</label>
             <textarea id="saudacao"></textarea>
 
             <label>Menu de Opções:</label>
-            <textarea id="menu"></textarea>
 
-            <h3>Respostas ao menu</h3>
+            <div id="lista-opcoes"></div>
 
-            <label>Opção um:</label>
-            <textarea id="opUm"></textarea>
+            <button type="button" onclick="adicionarOpcao()" style="background: #007bff; margin-top: 10px;">
+                + Adicionar Opção
+            </button>
 
-            <label>Opção dois:</label>
-            <textarea id="opDois"></textarea>
+            <template id="template-opcao">
+                <div class="linha-opcao" style="display: flex; gap: 10px; margin-bottom: 10px;">
+
+                    <input type="text" class="input-codigo-opcao" placeholder="1, 2, 3...">
+
+                    <input type="text" class="input-descricao-opcao" placeholder="Quero o orçamento, já estou aqui, quero conversar com funlano...">
+
+                    <select class="input-categoria-opcao" style="flex: 1;">
+                        <option value="">Selecione...</option>
+                        <option value="orcamento">Rota de resposta para orçamento</option>
+                        <option value="presencial">Rota de resposta para quando o cliente está no local</option>
+                        <option value="redirecionamento">Rota para redirecionar o cliente para outro número</option>
+                        <option value="horario">Rota de resposta para horário de funcionamento</option>
+                        <option value="ajuda">Rota de resposta para atendimento humano</option>
+                    </select>
+
+                    <button type="button" onclick="removerLinha(this)" style="background-color: red; width: 40px;">X</button>
+
+                </div>
+            </template>
 
 
         </details>
@@ -220,16 +216,22 @@
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         */
 
-        // Função para atualizar os dropdowns de categoria em cada linha de produto
-        function atualizarTodosDropdowns() {
-            // 1. Pega as categorias escritas e limpa (tira espaços e vazios)
-            const texto = document.getElementById('categorias-globais').value;
+        // ==== Função para pegar as categorias ====
+        function getCategorias() {
+            const texto = document.getElementById('categorias-produtos').value;
             const categorias = texto.split(',').map(c => c.trim()).filter(c => c !== '');
+            return categorias;
+        }
 
-            // 2. Busca todos os selects de produtos que existem na tela
+        // ==== Função para atualizar os dropdowns de categoria em cada linha de produto ====
+        function atualizarTodosDropdowns() {
+            // Pega as categorias escritas e limpa (tira espaços e vazios)
+            const categorias = getCategorias();
+
+            // Busca todos os selects de produtos que existem na tela
             const selects = document.querySelectorAll('.input-categoria-select');
 
-            // 3. Atualiza um por um
+            // Atualiza um por um
             selects.forEach(select => {
                 const valorSelecionadoAntes = select.value; // Salva o que o usuário já tinha escolhido
 
@@ -252,9 +254,84 @@
 
         /*
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        FUNÇÕES PARA A TABELA DE PRODUTOS
+        FUNÇÕES PARA COMPONENTES DINÂMICOS COMO A TABELA DE PRODUTOS E AS OPÇÕES DO MENU
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         */
+
+        // ==== FUNÇÕES PARA PREPARAR PARA SALVAR ====
+
+        // ----- Funções Opções -----
+
+        // Obter os dados da lista de opções
+        function getListaOpcoes() {
+            // Array que vai ser devolvida
+            const arrayOpcoes = [];
+            // Lista das opções no html
+            const lista = document.querySelectorAll('.linha-opcao');
+            // Alimentando a arrayOpcoes
+            lista.forEach(linha => {
+                // Pegando os valores da linha
+                const codigo = linha.querySelector('.input-codigo-opcao').value;
+                const descricao = linha.querySelector('.input-descricao-opcao').value;
+                const categoria = linha.querySelector('.input-categoria-opcao').value;
+
+                if (codigo && descricao && categoria ) {
+                    arrayOpcoes.push({id: codigo, descricao: descricao, categoria: categoria });
+                }
+
+            });
+
+            return arrayOpcoes;
+        }
+
+        // ----- Funções Produtos -----
+
+        // Onter os dados da tabela de produtos
+        function getDadosTabela() {
+            // Array que vai ser devolvida
+            const arrayProdutos = [];
+            // Lista dos produtos no html
+            const lista = document.querySelectorAll('.linha-produto');
+            // Alimentando a arrayProdutos
+            lista.forEach(linha => {
+                const codigo = linha.querySelector('.input-codigo').value;
+                const nome = linha.querySelector('.input-nome').value;
+                const precodigitado = linha.querySelector('.input-preco').value;
+                const preco = parseFloat(precodigitado.replace(',', '.')); // Converte para número, considerando vírgula como decimal
+                const categoria = linha.querySelector('.input-categoria-select').value;
+                if (codigo && nome && preco && categoria) { // Só adiciona se tiver todos os campos preenchidos
+                    arrayProdutos.push({ id: codigo, nome: nome, preco: preco, categoria: categoria });
+                }
+            });
+
+            // Devolvendo a arrayProdutos
+            return arrayProdutos;
+
+        }
+
+        // ==== FUNÇÕES DE TEMPLATE ====
+
+        // ----- Função Opções -----
+
+        // Função para adicionar uma nova linha de opção no menu
+        function adicionarOpcao(codigo = '', descricao = '', categoriaSalva = '') {
+            // Get dos elementos necessários
+            const lista = document.getElementById('lista-opcoes');
+            const template  = document.getElementById('template-opcao');
+
+            //Clona o template 
+            const clone = template.content.cloneNode(true);
+
+            // Preenche o clone
+            clone.querySelector('.input-codigo-opcao').value = codigo;
+            clone.querySelector('.input-descricao-opcao').value = descricao;
+            clone.querySelector('.input-categoria-opcao').value = categoriaSalva;
+
+            // Cria o clone dentro da lista
+            lista.appendChild(clone);
+        }
+
+        // ----- Função Produtos -----
 
         // Função para adicionar uma nova linha de produto
         function adicionarProduto(codigo = '', nome = '', preco = '', categoriaSalva = '') {
@@ -270,8 +347,7 @@
             clone.querySelector('.input-preco').value = preco;
 
             // Pega as categorias atuais do textarea global
-            const textoCategorias = document.getElementById('categorias-globais').value;
-            const categorias = textoCategorias.split(',').map(c => c.trim()).filter(c => c !== '');
+            const categorias = getCategorias();
 
             // Cria o select de categoria
             const select = clone.querySelector('.input-categoria-select');
@@ -290,6 +366,9 @@
             lista.appendChild(clone);
         }
 
+        // ==== FUNÇÕES GERAIS ====
+
+        // Remover linhas
         function removerLinha(botao) {
             botao.parentElement.remove();
         }
@@ -314,20 +393,23 @@
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
        */
 
-        // Carregar dados ao abrir a página
+        // ==== CARREGAR OS DADOS QUANDO ABRIR A PÁGINA ====
+
         fetch('/api/config')
             .then(res => res.json())
             .then(data => {
                 // Preencher os textos normais
-                document.getElementById('saudacao_arquivo').value = data.saudacao_arquivo;
-                document.getElementById('menu_arquivo').value = data.menu_arquivo;
-                document.getElementById('saudacao').value = data.saudacao;
-                document.getElementById('menu').value = data.menu;
-                // Preencher as respostas opcionais (usei || '' para evitar erro se estiver vazio)
-                document.getElementById('opUmArc').value = data.opUmArc || '';
-                document.getElementById('opDoisArc').value = data.opDoisArc || '';
-                document.getElementById('opUm').value = data.opUm || '';
-                document.getElementById('opDois').value = data.opDois || '';
+                document.getElementById('saudacao').value = data.saudacao || '';
+                // Preencher a lista de opções
+                const listaOpcoes = document.getElementById('lista-opcoes');
+                listaOpcoes.innerHTML = ''; //Esvazia opções
+                if (data.opcoes && data.opcoes.length > 0) {
+                    data.opcoes.forEach(opcao => {
+                        adicionarOpcao(opcao.id, opcao.descricao, opcao.categoria);
+                    });
+                } else {
+                    adicionarOpcao();
+                }
 
                 // Marcas as horas de funcionamento
                 document.getElementById('inicio').value = data.horarioInicio || '';
@@ -345,7 +427,7 @@
                 }
 
                 // Preencher as categorias globais
-                document.getElementById('categorias-globais').value = data.categoriasGlobais ? data.categoriasGlobais.join(', ') : '';
+                document.getElementById('categorias-produtos').value = data.categoriasProdutos ? data.categoriasProdutos.join(', ') : '';
 
                 // Carregar a tabela de produtos
                 const lista = document.getElementById('lista-produtos');
@@ -360,43 +442,31 @@
                     adicionarProduto();
                 }
             });
+        
 
-        // Enviar dados ao clicar em Salvar
+        // ==== ENVIAR DADOS AO CLICAR EM SALVAR ====
         function salvar() {
 
+            // ----- Pegando as Opções -----
+            const opcoes = getListaOpcoes();
+
+            // ----- Pegando Dias de Funcionamento -----
             const diasSelecionados = getSelectedDays();
 
+            // ----- Tabela de produtos -----
             // Obter os dados da tabela de produtos
-            const lista = document.querySelectorAll('.linha-produto');
-            const arrayProdutos = [];
+            const arrayProdutos = getDadosTabela();
 
-            lista.forEach(linha => {
-                const codigo = linha.querySelector('.input-codigo').value;
-                const nome = linha.querySelector('.input-nome').value;
-                const precodigitado = linha.querySelector('.input-preco').value;
-                const preco = parseFloat(precodigitado.replace(',', '.')); // Converte para número, considerando vírgula como decimal
-                const categoria = linha.querySelector('.input-categoria-select').value;
-                if (codigo && nome && preco && categoria) { // Só adiciona se tiver todos os campos preenchidos
-                    arrayProdutos.push({ id: codigo, nome: nome, preco: preco, categoria: categoria });
-                }
-            });
+            // Obter as categorias globais dos produtos
+            const categoriasProdutos = getCategorias();
 
-            // Obter as categorias globais
-            const textoCategorias = document.getElementById('categorias-globais').value;
-            const categoriasGlobais = textoCategorias.split(',').map(c => c.trim()).filter(c => c !== '');
-
+            // Objeto que vai ser enviado para o backend
             const dados = {
 
                 // textos normais
-                saudacao_arquivo: document.getElementById('saudacao_arquivo').value,
-                menu_arquivo: document.getElementById('menu_arquivo').value,
                 saudacao: document.getElementById('saudacao').value,
-                menu: document.getElementById('menu').value,
-                // Respostas opcionais
-                opUmArc: document.getElementById('opUmArc').value,
-                opDoisArc: document.getElementById('opDoisArc').value,
-                opUm: document.getElementById('opUm').value,
-                opDois: document.getElementById('opDois').value,
+                // As opções que o clinet evai ter
+                opcoes: opcoes,
                 // Horários de funcionamento
                 horarioInicio: document.getElementById('inicio').value,
                 horarioFim: document.getElementById('fim').value,
@@ -407,24 +477,26 @@
                 // Tabela de produtos
                 produtos: arrayProdutos,
                 // Categorias globais
-                categoriasGlobais: categoriasGlobais,
+                categoriasProdutos: categoriasProdutos,
 
 
             };
 
-            /*
-            =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-            FUNÇÃO PARA ENVIAR OS DADOS PARA O BACKEND
-            =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-            */
-
+            // Enviando os dados para o backend
             fetch('/api/config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dados)
-            }).then(() => {
+            }).then(res => {
+                if (!res.ok) throw new Error("Erro no servidor");
                 const status = document.getElementById('status');
                 status.innerText = "Salvo com sucesso!";
+                setTimeout(() => status.innerText = "", 3000);
+            }).catch(erro => {
+                console.error("Erro ao salvar:", erro);
+                const status = document.getElementById('status');
+                status.style.color = 'red';
+                status.innerText = "Erro ao salvar. Tente novamente.";
                 setTimeout(() => status.innerText = "", 3000);
             });
         }
