@@ -54,7 +54,7 @@ class MessageHadler {
 
     // Cria um novo timer de debounce, para esperar se o cliente vai mandar mais mensagens em sequência
     this.debounceTimers[idUsuario] = setTimeout(async () => {
-      console.log("Mensagem recebida de", message.from, ":", message.body);
+      console.log("Começando a responder.");
 
       await chat.clearState(); // Limpa o estado de digitação.
 

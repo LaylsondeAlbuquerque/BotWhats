@@ -8,7 +8,6 @@ const { send } = require("process");
 const MessageHadler = require("./src/services/botservices/messageHandler");
 
 
-
 // --- CONFIGURAÇÃO INICIAL ---
 const app = express();
 const PORT = 3000;
@@ -84,6 +83,8 @@ client.on("ready", () => {
 client.on("message", async (message) => {
   
   if (message.from.includes("@g.us") || message.isStatus) return; // Ignora mensagens de grupos e status
+
+  console.log(`Mensagem recebida de ${message.from}: ${message.body}`)
     
   handler.handler(client, message, config);
   
