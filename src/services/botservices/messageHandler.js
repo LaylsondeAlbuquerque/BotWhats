@@ -37,6 +37,7 @@ class MessageHadler {
         );
         console.log(`Atendimento do cliente ${idUsuario} encerrado.`);
         delete this.userStages[idUsuario];
+        delete this.userTimers[idUsuario];
       }
     }, TEMPO_EXPIRACAO);
 
@@ -58,7 +59,10 @@ class MessageHadler {
 
       await chat.clearState(); // Limpa o estado de digitação.
 
-      this.mainMenu.mainMenu(client, message.body, config, this.userStages, idUsuario);
+      await this.mainMenu.mainMenu(client, message, config, this.userStages, this.userTimers,idUsuario);
+
+      delete this.debounceTimers[idUsuario];
+
 
     }, DEBOUNCE_TIME);
 

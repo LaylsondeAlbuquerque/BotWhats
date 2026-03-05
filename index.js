@@ -81,6 +81,15 @@ client.on("ready", () => {
 
 // =-=-=-=-=-=-=-= FUNÇAO PARA ENVIAR MENSAGENS =-=-=-=-=-=-=-=
 client.on("message", async (message) => {
+
+  // 1. Pega o horário atual em segundos
+  const tempoAtual = Math.floor(Date.now() / 1000);
+
+  // 2. Se a mensagem for de mais de 2 minutos atrás ele ignora
+  if (tempoAtual - message.timestamp > 120) {
+      console.log("Mensagem antiga ignorada.");
+      return; 
+  }
   
   if (message.from.includes("@g.us") || message.isStatus) return; // Ignora mensagens de grupos e status
 

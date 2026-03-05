@@ -1,15 +1,68 @@
 {
-  "saudacao_arquivo": "Olá! Que bom te ter aqui! Como posso te ajudar",
-  "menu_arquivo": "1. Já estou na gráfica\n2. Ainda vou chegar ai",
   "saudacao": "Olá! Como posso ajudar?",
-  "menu": "1. Preços\n2. Suporte",
-  "opUmArc": "Ótimo, nosso funcionário irá lhe atender.",
-  "opDoisArc": "Essa é nossa tabela de preço:\n\n\nSó podemos começar a impressão mediante pagamento prévio.",
-  "opUm": "Tabela de Preços",
-  "opDois": "Por favor, aguarde, você será atendido por um de nossos atendentes em breve.",
+  "opcoes": [
+    { "id": "1", "descricao": "Quero orçamento.", "categoria": "orcamento" },
+    {
+      "id": "2",
+      "descricao": "Já estou na loja.",
+      "categoria": "presencial"
+    },
+    {
+      "id": "3",
+      "descricao": "Quero ser redirecionado para outro setor.",
+      "categoria": "redirecionamento",
+      "telefone": "5511900000000"
+    },
+    {
+      "id": "4",
+      "descricao": "Qual o horário de funcionamento?",
+      "categoria": "horario"
+    },
+    {
+      "id": "5",
+      "descricao": "Quero ajuda com alguma outra coisa.",
+      "categoria": "ajuda"
+    }
+  ],
   "horarioInicio": "08:00",
   "horarioFim": "18:00",
   "almocoInicio": "12:00",
   "almocoFim": "14:00",
-  "diasFuncionamento": ["1", "2", "3", "4", "5"]
+  "diasFuncionamento": ["1", "2", "3", "4", "5"],
+  "produtos": [
+    { "id": "1", "nome": "produto1", "preco": 0.3, "categoria": "categoria1" },
+    { "id": "2", "nome": "produto2", "preco": 0.75, "categoria": "categoria1" },
+    {
+      "id": "3",
+      "nome": "produto3",
+      "preco": 0.75,
+      "categoria": "categoria2"
+    },
+    { "id": "4", "nome": "produto4", "preco": 1.3, "categoria": "categoria2" },
+    {
+      "id": "5",
+      "nome": "produto5",
+      "preco": 4,
+      "categoria": "categoria3"
+    },
+    {
+      "id": "6",
+      "nome": "produto6",
+      "preco": 5,
+      "categoria": "categoria3"
+    },
+    {
+      "id": "7",
+      "nome": "produto7",
+      "preco": 6,
+      "categoria": "categoria3"
+    },
+    {
+      "id": "8",
+      "nome": "produto8",
+      "preco": 7,
+      "categoria": "categoria3"
+    }
+  ],
+  "categoriasProdutos": ["categoria1", "categoria2", "categoria3"]
 }
