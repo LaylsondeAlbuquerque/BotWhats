@@ -1,8 +1,7 @@
-const Quote = require("./quote.service");
 
 class MainMenu {
   constructor() {
-    this.quote = new Quote();
+
   }
 
   // -=-=-=-=-=-=-=-= Mensagem de Finalização =-=-=-=-=-=-=-=-
@@ -89,7 +88,6 @@ class MainMenu {
         break;
 
       case "orcamento":
-        await this.quote.quote(client, msg, config, userStages, idUsuario);
 
         await sendMessage("Deseja algo mais?\n\n1 - sim\n2 - não");
         userStages[idUsuario] = "algoMais";
