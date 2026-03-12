@@ -1,17 +1,16 @@
 const MainMenu = require("./mainMenu.service");
-const estaPronto = false;
 
 class Quote {
-  constructor() {
-    this.mainMenu = new MainMenu();
+    constructor(mainMenu) {
+    this.mainMenu = mainMenu;
     this.orcamentoStages = {};
     this.carrinhoOrcamento = {};
     this.itemAtual = {};
     this.idCarrinho = {};
   }
 
-  async menuProdutos(config) {
-    let menuProdutos = "Escolha um produto:\n";
+  async menuProdutos(config, client, idUsuario) {
+    let textoMenu = "Escolha um produto:\n";
 
     config.categoriasProdutos.forEach((categoria) => {
       const produtosDaCategoria = config.produtos.filter(
@@ -19,125 +18,111 @@ class Quote {
       );
 
       if (produtosDaCategoria.length > 0) {
-        menuProdutos += `\n*${categoria}*\n\n`;
+        textoMenu += `\n*${categoria}*\n\n`;
         produtosDaCategoria.forEach((produto) => {
           const precoVisto = produto.preco.toString().replace(".", ",");
-          menuProdutos += `*${produto.id}* - ${produto.categoria} - ${produto.nome} - R$ ${precoVisto}.\n`;
+          textoMenu += `*${produto.id}* - ${produto.categoria} - ${produto.nome} - R$ ${precoVisto}.\n`;
         });
       }
     });
 
-    menuProdutos += `Digite "voltar" para retornar ao menu principal.`
+    textoMenu += `\nDigite "voltar" para retornar ao menu principal.`;
 
-    await sendMessage(menuProdutos);
+    await client.sendMessage(idUsuario, textoMenu);
     this.orcamentoStages[idUsuario] = "aguardando-escolha";
   }
 
   async quote(client, msg, config, userStages, idUsuario) {
-    // função para enviar resposta
     const sendMessage = async (resposta) => {
       await client.sendMessage(idUsuario, resposta);
     };
 
-    if (estaPronto) {
-      // Definição do stage atual, casa não haja nenhum, manda o cliente para o menu de produtos
-      const ocamentoStage = this.orcamentoStages[idUsuario] || "menu-produtos";
+    const textoLimpo = msg.trim().toLowerCase(); 
+    const ocamentoStage = this.orcamentoStages[idUsuario] || "menu-produtos";
 
-      switch (ocamentoStage) {
-        // Menu de produtos
-        case "menu-produtos":
-          await this.menuProdutos(config);
+    switch (ocamentoStage) {
+      
+      case "menu-produtos":
+        await this.menuProdutos(config, client, idUsuario);
+        break;
 
-          break;
+      case "aguardando-escolha":
+        if (textoLimpo === "voltar") {
+          userStages[idUsuario] = "inicial-menu";
+          delete this.carrinhoOrcamento[idUsuario];
+          this.mainMenu.menu(config, client, idUsuario, userStages);
+          return;
+        }
 
-        // Processamento da resposta e acrescento ao carrinho.
-        case "aguardando-escolha":
+        const produtoSelecionado = config.produtos.find(
+          (produto) => produto.id == msg,
+        );
 
-          if (msg === "voltar") {
-            userStages[idUsuario] = "inicial-menu";
-            delete this.carrinhoOrcamento[idUsuario];
-            this.mainMenu.menu(config, client, idUsuario, userStages);
-            return;
-          }
-
-          const produtoSelecionado = config.produtos.find(
-            (produto) => produto.id == msg,
-          );
-
+        if (produtoSelecionado) {
           let idDoCarrinho = this.idCarrinho[idUsuario] || 0;
           idDoCarrinho += 1;
 
-          if (produtoSelecionado) {
-            if (this.carrinhoOrcamento[idUsuario]) {
-              const novoProduto = {
-                ...produtoSelecionado,
-                quant: 1,
-                idCarrinho: idDoCarrinho,
-              };
-              this.carrinhoOrcamento[idUsuario].push(novoProduto);
-            } else {
-              this.carrinhoOrcamento[idUsuario] = [
-                { ...produtoSelecionado, quant: 1 },
-              ];
-            }
-            
-            this.itemAtual[idUsuario] = idDoCarrinho
-            this.orcamentoStages[idUsuario] = "quantos";
-            this.idCarrinho[idUsuario] = idDoCarrinho;
+          const novoProduto = {
+            ...produtoSelecionado,
+            quant: 1,
+            idCarrinho: idDoCarrinho,
+          };
 
-            await sendMessage(
-              `Produto salvo no seu carrinho!\n\nQuantos/as ${produtoSelecionado.categoria} ${produtoSelecionado.nome} você deseja?\n\nPor favor, digite um número inteiro (1, 2, 3...20) para a quantidade desejada, ou digite "voltar" para ser encamilhado ao menu de produtos, ou digite "cancelar" para excluir esse produto do carrinho.`,
-            );
+          if (this.carrinhoOrcamento[idUsuario]) {
+            this.carrinhoOrcamento[idUsuario].push(novoProduto);
           } else {
-            await sendMessage(
-              "Opção inválida, por favor selecione uma válida.",
+            this.carrinhoOrcamento[idUsuario] = [novoProduto];
+          }
+
+          this.itemAtual[idUsuario] = idDoCarrinho;
+          this.orcamentoStages[idUsuario] = "quantos";
+          this.idCarrinho[idUsuario] = idDoCarrinho;
+
+          await sendMessage(
+            `Produto salvo no seu carrinho!\n\nQuantos/as ${produtoSelecionado.categoria} ${produtoSelecionado.nome} você deseja?\n\nPor favor, digite um número inteiro (1, 2, 3...20) para a quantidade desejada, ou digite "voltar" para ser encaminhado ao menu de produtos, ou digite "cancelar" para excluir esse produto do carrinho.`,
+          );
+        } else {
+          await sendMessage("Opção inválida, por favor selecione uma válida.");
+        }
+        break;
+
+      case "quantos":
+        if (textoLimpo === "voltar") {
+          this.orcamentoStages[idUsuario] = "menu-produtos";
+          await this.menuProdutos(config, client, idUsuario);
+          return;
+        }
+
+        if (/^\d+$/.test(textoLimpo)) {
+          const quantidade = parseInt(textoLimpo, 10);
+
+          const produtoNoCarrinho = this.carrinhoOrcamento[idUsuario].find(
+            (item) => item.idCarrinho === this.itemAtual[idUsuario],
+          );
+
+          if (produtoNoCarrinho) {
+            produtoNoCarrinho.quant = quantidade;
+            console.log(
+              `Cliente ${idUsuario} escolheu ${quantidade} ${produtoNoCarrinho.categoria} ${produtoNoCarrinho.nome}`,
             );
           }
 
-          break;
+          await sendMessage("Pronto, seu carrinho foi atualizado.\n\nDeseja:\n1 - Adicionar outro produto\n2 - Alterar a quantidade de algum produto\n3 - Retirar algum produto do carrinho\n4 - Finalizar orçamento");
+          
+          this.orcamentoStages[idUsuario] = "outras-opcoes";
 
-        case "quantos":
+        } else {
+           await sendMessage("Valor inválido. Digite um número inteiro (Ex: 2).");
+        }
+        break;
 
-          if (msg = "voltar") {
-            this.orcamentoStages[idUsuario] = "menu-produtos";
-            await this.menuProdutos(config);
-            return;
-          }
+      case "outras-opcoes":
+        if (msg === "1") {
+          await this.menuProdutos(config, client, idUsuario);
+        } else {
 
-          const textoLimpo = msg.trim();
-
-          if (/^\d+$/.test(textoLimpo)) {
-            const quantidade = parseInt(textoLimpo, 10);
-
-            const produtoNoCarrinho = this.carrinhoOrcamento[idUsuario].find(
-              (item) => item.idCarrinho === this.itemAtual[idUsuario],
-            );
-
-            if (produtoNoCarrinho) {
-              produtoNoCarrinho.quant = quantidade;
-
-              console.log(
-                `Cliente ${idUsuario} escolheu ${quantidade} ${produtoNoCarrinho.categoria} ${produtoNoCarrinho.nome}`,
-              );
-            }
-
-            sendMessage("Pronto, seu carrinho foi atualizado.")
-
-            
-          }
-
-          break;
-
-        case "selecionar-outro":
-          if (msg === "1") {
-            await menuProdutos();
-          } else if (msg === "2") {
-          }
-
-          break;
-      }
-    } else {
-      console.log("deu certo");
+        }
+        break;
     }
   }
 }
