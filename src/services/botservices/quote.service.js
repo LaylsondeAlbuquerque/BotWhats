@@ -1,5 +1,3 @@
-const MainMenu = require("./mainMenu.service");
-
 class Quote {
     constructor(mainMenu) {
     this.mainMenu = mainMenu;
