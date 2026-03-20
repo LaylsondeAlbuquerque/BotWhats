@@ -1,18 +1,37 @@
+/**
+ * @file quote.service.js
+ * @description Gerencia a fase inicial de criação de orçamentos e do carrinho de compras.
+ * Responsável por listar produtos, adicionar o primeiro item e perguntar a quantidade inicial.
+ */
+
+const OtherOptions = require('./otherOptions.service');
+
 class Quote {
-    constructor(mainMenu) {
+  constructor(mainMenu) {
     this.mainMenu = mainMenu;
+    
+    // Estados locais para controle do carrinho
     this.orcamentoStages = {};
     this.carrinhoOrcamento = {};
     this.itemAtual = {};
     this.idCarrinho = {};
+    
+    // Instancia a classe que vai cuidar dos submenus de alteração/exclusão/finalização
+    this.otherOptions = new OtherOptions();
   }
 
+  /**
+   * Monta e envia o menu de categorias e produtos disponíveis.
+   * @param {object} config - Objeto com as configurações e lista de produtos.
+   * @param {object} client - Instância do cliente do WhatsApp.
+   * @param {string} idUsuario - Número/ID do usuário.
+   */
   async menuProdutos(config, client, idUsuario) {
     let textoMenu = "Escolha um produto:\n";
 
     config.categoriasProdutos.forEach((categoria) => {
       const produtosDaCategoria = config.produtos.filter(
-        (produto) => produto.categoria == categoria,
+        (produto) => produto.categoria == categoria
       );
 
       if (produtosDaCategoria.length > 0) {
@@ -27,23 +46,34 @@ class Quote {
     textoMenu += `\nDigite "voltar" para retornar ao menu principal.`;
 
     await client.sendMessage(idUsuario, textoMenu);
+    
+    // Atualiza o estágio do usuário para aguardar a escolha do produto
     this.orcamentoStages[idUsuario] = "aguardando-escolha";
   }
 
+  /**
+   * Processador principal do fluxo de orçamento.
+   */
   async quote(client, msg, config, userStages, idUsuario) {
     const sendMessage = async (resposta) => {
       await client.sendMessage(idUsuario, resposta);
     };
 
     const textoLimpo = msg.trim().toLowerCase(); 
-    const ocamentoStage = this.orcamentoStages[idUsuario] || "menu-produtos";
+    const orcamentoStage = this.orcamentoStages[idUsuario] || "menu-produtos";
 
-    switch (ocamentoStage) {
+    switch (orcamentoStage) {
       
+      // --------------------------------------------------
+      // 1. MOSTRAR LISTA DE PRODUTOS
+      // --------------------------------------------------
       case "menu-produtos":
         await this.menuProdutos(config, client, idUsuario);
         break;
 
+      // --------------------------------------------------
+      // 2. RECEBER O ID DO PRODUTO ESCOLHIDO
+      // --------------------------------------------------
       case "aguardando-escolha":
         if (textoLimpo === "voltar") {
           userStages[idUsuario] = "inicial-menu";
@@ -53,7 +83,7 @@ class Quote {
         }
 
         const produtoSelecionado = config.produtos.find(
-          (produto) => produto.id == msg,
+          (produto) => produto.id == textoLimpo // Usando o texto limpo para garantir a comparação
         );
 
         if (produtoSelecionado) {
@@ -66,26 +96,35 @@ class Quote {
             idCarrinho: idDoCarrinho,
           };
 
+          // Cria o carrinho se não existir, ou adiciona ao existente
           if (this.carrinhoOrcamento[idUsuario]) {
             this.carrinhoOrcamento[idUsuario].push(novoProduto);
           } else {
             this.carrinhoOrcamento[idUsuario] = [novoProduto];
           }
 
+          // Salva referências para a próxima etapa
           this.itemAtual[idUsuario] = idDoCarrinho;
-          this.orcamentoStages[idUsuario] = "quantos";
           this.idCarrinho[idUsuario] = idDoCarrinho;
+          this.orcamentoStages[idUsuario] = "quantos";
 
           await sendMessage(
-            `Produto salvo no seu carrinho!\n\nQuantos/as ${produtoSelecionado.categoria} ${produtoSelecionado.nome} você deseja?\n\nPor favor, digite um número inteiro (1, 2, 3...20) para a quantidade desejada, ou digite "voltar" para ser encaminhado ao menu de produtos, ou digite "cancelar" para excluir esse produto do carrinho.`,
+            `Produto salvo no seu carrinho!\n\nQuantos(as) *${produtoSelecionado.categoria} ${produtoSelecionado.nome}* você deseja?\n\nPor favor, digite um número inteiro (Ex: 1, 2, 5) para a quantidade desejada, ou digite "voltar" para retornar ao menu de produtos.`
           );
         } else {
-          await sendMessage("Opção inválida, por favor selecione uma válida.");
+          await sendMessage("Opção inválida, por favor selecione um ID válido da lista.");
         }
         break;
 
+      // --------------------------------------------------
+      // 3. DEFINIR A QUANTIDADE DO PRODUTO
+      // --------------------------------------------------
       case "quantos":
         if (textoLimpo === "voltar") {
+          // Remove o item que acabou de ser adicionado, pois o usuário desistiu da quantidade
+          this.carrinhoOrcamento[idUsuario] = this.carrinhoOrcamento[idUsuario].filter(
+            (item) => item.idCarrinho !== this.itemAtual[idUsuario]
+          );
           this.orcamentoStages[idUsuario] = "menu-produtos";
           await this.menuProdutos(config, client, idUsuario);
           return;
@@ -95,31 +134,34 @@ class Quote {
           const quantidade = parseInt(textoLimpo, 10);
 
           const produtoNoCarrinho = this.carrinhoOrcamento[idUsuario].find(
-            (item) => item.idCarrinho === this.itemAtual[idUsuario],
+            (item) => item.idCarrinho === this.itemAtual[idUsuario]
           );
 
           if (produtoNoCarrinho) {
             produtoNoCarrinho.quant = quantidade;
             console.log(
-              `Cliente ${idUsuario} escolheu ${quantidade} ${produtoNoCarrinho.categoria} ${produtoNoCarrinho.nome}`,
+              `[${idUsuario}] Adicionou ${quantidade}x ${produtoNoCarrinho.categoria} ${produtoNoCarrinho.nome} ao carrinho.`
             );
           }
 
-          await sendMessage("Pronto, seu carrinho foi atualizado.\n\nDeseja:\n1 - Adicionar outro produto\n2 - Alterar a quantidade de algum produto\n3 - Retirar algum produto do carrinho\n4 - Finalizar orçamento");
+          await sendMessage("Pronto, seu carrinho foi atualizado!\n\nDeseja:\n*1* - Adicionar outro produto\n*2* - Alterar a quantidade de algum produto\n*3* - Retirar algum produto do carrinho\n*4* - Finalizar orçamento");
           
           this.orcamentoStages[idUsuario] = "outras-opcoes";
 
         } else {
-           await sendMessage("Valor inválido. Digite um número inteiro (Ex: 2).");
+           await sendMessage("Valor inválido. Digite apenas um número inteiro (Ex: 2).");
         }
         break;
 
+      // --------------------------------------------------
+      // 4. DELEGAÇÃO PARA OUTRAS OPÇÕES (Carrinho/Finalizar)
+      // --------------------------------------------------
       case "outras-opcoes":
-        if (msg === "1") {
-          await this.menuProdutos(config, client, idUsuario);
-        } else {
-
-        }
+      case "alterar-escolher-id":
+      case "alterar-nova-quant":
+      case "retirar-escolher-id":
+      case "retirar-confirmacao":
+        await this.otherOptions.processar(client, msg, config, userStages, idUsuario, this);
         break;
     }
   }

@@ -1,73 +1,79 @@
+/**
+ * @file messageHandler.js
+ * @description Gerencia o fluxo inicial de mensagens.
+ * Responsável por controlar timers de inatividade (timeout) e evitar respostas duplicadas (debounce).
+ */
+
 const MainMenu = require("./mainMenu.service");
 
-const TEMPO_EXPIRACAO = 600000; // 10 minutos
-const DEBOUNCE_TIME = 5000; // 5 segundos
+const TEMPO_EXPIRACAO = 600000; // 10 minutos em milissegundos
+const DEBOUNCE_TIME = 5000;     // 5 segundos em milissegundos
 
-class MessageHadler {
-
+class MessageHandler {
   constructor() {
-    // ---- Stages ----
     this.userStages = {};
-
-    // ---- Timers ----
     this.userTimers = {};
     this.debounceTimers = {};
-
-    // ---- Classe ----
     this.mainMenu = new MainMenu();
-
   }
 
+  /**
+   * Processa a mensagem recebida, aplica as regras de tempo e encaminha para o menu.
+   * * @param {object} client - Instância do cliente do WhatsApp (whatsapp-web.js).
+   * @param {object} message - Objeto da mensagem recebida.
+   * @param {object} config - Configurações carregadas do JSON.
+   */
   async handler(client, message, config) {
+    const idUsuario = message.from;
 
-    const idUsuario = message.from; //Número do usuário
-
-    // ---- Timer para finalizar a conversa ----
-
-    // Limpa o timer toda vez que o usuário interage, para que a contagem de finalização de conversa não seja enviada enquanto o cliente ainda está mandando mensagem recorrentemente.
+    // 1. Controle de Inatividade (Timeout)
+    // Se o usuário interagiu, limpamos a contagem antiga de encerramento.
     if (this.userStages[idUsuario]) {
       clearTimeout(this.userTimers[idUsuario]);
     }
 
-    // Recomeça o timer para que se o cliente não enviar nenhuma mensagem em determinado tempo (definido no TEMPO_EXPIRACAO, é enviada uma mensagem de finalizaçao. - quando o cliente chegar no stage "finalizar" o timer tem que ser limpo.)
+    // Inicia uma nova contagem. Se zerar, o atendimento cai.
     this.userTimers[idUsuario] = setTimeout(async () => {
       if (this.userStages[idUsuario]) {
-        await client.sendMessage(idUsuario,
-          "⚠️ *Atendimento encerrado por inatividade.* \n Envie 'Oi' para começar de novo.",
+        await client.sendMessage(
+          idUsuario,
+          "⚠️ *Atendimento encerrado por inatividade.* \nEnvie 'Oi' para começar de novo."
         );
-        console.log(`Atendimento do cliente ${idUsuario} encerrado.`);
+        console.log(`Atendimento do cliente ${idUsuario} encerrado por inatividade.`);
+        
+        // Limpa a memória para não vazar RAM
         delete this.userStages[idUsuario];
         delete this.userTimers[idUsuario];
       }
     }, TEMPO_EXPIRACAO);
 
-    // ---- Timer para evitar que o chat fique respondendo mensagens repetidas ----
-
-    // Exclui o timer de debounce anterior, para que se o cliente mandar várias mensagem consecutivas, o bot só responda uma vez.
+    // 2. Controle de Spam (Debounce)
+    // Se o cliente mandar várias mensagens rápido (ex: manda "oi", depois manda a foto), 
+    // cancelamos a resposta do "oi" para responder só quando ele parar de digitar.
     if (this.debounceTimers[idUsuario]) {
       clearTimeout(this.debounceTimers[idUsuario]);
     }
 
     const chat = await message.getChat();
+    await chat.sendStateTyping();
 
-    await chat.sendStateTyping(); // Mostra que o bot está digitando...
-    console.log("Bot digitando...");
-
-    // Cria um novo timer de debounce, para esperar se o cliente vai mandar mais mensagens em sequência
+    // Aguarda o tempo de debounce antes de efetivamente processar a resposta
     this.debounceTimers[idUsuario] = setTimeout(async () => {
-      console.log("Começando a responder.");
+      await chat.clearState();
 
-      await chat.clearState(); // Limpa o estado de digitação.
-
-      await this.mainMenu.mainMenu(client, message, config, this.userStages, this.userTimers,idUsuario);
+      // Repassa a responsabilidade de responder para o MainMenu
+      await this.mainMenu.mainMenu(
+        client, 
+        message, 
+        config, 
+        this.userStages, 
+        this.userTimers, 
+        idUsuario
+      );
 
       delete this.debounceTimers[idUsuario];
-
-
     }, DEBOUNCE_TIME);
-
   }
-
 }
 
-module.exports = MessageHadler;
+module.exports = MessageHandler;
