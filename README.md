@@ -19,49 +19,55 @@
 
 <div align="center">
   <h3>Automação de Atendimento via WhatsApp com Interface de Configuração</h3>
-  <p>Um projeto de estudo focado em lógica de estados, manipulação de arquivos e criação de interfaces amigáveis para usuários finais.</p>
+  <p>Um projeto focado em lógica de estados, manipulação de arquivos, Clean Code e criação de interfaces amigáveis para usuários finais.</p>
 </div>
 
 ---
 
-## Sobre o Projeto
+## 💡 Sobre o Projeto
 
-Este projeto nasceu da necessidade de automatizar o atendimento inicial de uma **Gráfica**, permitindo que o cliente consulte preços e faça pedidos básicos de forma autônoma. 
+Este projeto nasceu da necessidade de automatizar o atendimento inicial de uma **Gráfica**, permitindo que o cliente consulte preços, horários, tire dúvidas e faça orçamentos de forma autônoma. 
 
-O diferencial técnico deste bot é a sua **independência de código para configuração**: foi desenvolvida uma interface Web local onde o dono da gráfica pode alterar as mensagens de saudação, cardápio e horários sem precisar tocar em uma linha de JavaScript.
+O diferencial técnico deste bot é a sua **independência de código para configuração**: foi desenvolvida uma interface Web local (Dashboard) onde o dono da gráfica pode alterar as mensagens de saudação, cardápio, produtos e horários de funcionamento sem precisar tocar em uma única linha de JavaScript.
 
-<details>
-<summary><strong> Funcionalidades (Roadmap)</strong></summary>
+> **📌 Nota de Evolução Comercial:** Este repositório público documenta o protótipo funcional, a arquitetura base e as soluções algorítmicas do sistema. Devido ao potencial de mercado validado, a evolução contínua deste projeto para um produto comercial (SaaS) seguirá o seu desenvolvimento em um repositório privado.
+
+<details open>
+<summary><strong>✨ Funcionalidades</strong></summary>
 <br>
 
-- [ ] **Gestão de Estados (State Machine):** Controle da etapa da conversa (Início, Menu, Pedido).
-- [x] **Painel de Configuração Web:** Interface local para editar textos do bot.
-- [x] **Timeout de Inatividade:** Encerramento automático após tempo sem resposta.
-- [ ] **Controle de Horário:** Verificação de dia/hora antes de responder.
-- [ ] **Filtro de Mídia:** Ignorar áudios e imagens soltas para evitar erros.
-- [x] **Versão Portátil:** Empacotamento para rodar sem instalação complexa.
+- [x] **Painel de Configuração Web:** Interface local (Express) para editar textos do bot dinamicamente.
+- [x] **Gestão de Estados (State Machine):** Controle inteligente e modular da etapa da conversa (Menu principal, Orçamento, Carrinho).
+- [x] **Carrinho de Compras:** Sistema de adição, remoção, alteração de quantidade e cálculo automático de orçamento.
+- [x] **Timeout de Inatividade:** Encerramento e limpeza de memória automática após tempo sem resposta.
+- [x] **Filtro Anti-Spam (Debounce):** Evita que o bot responda múltiplas vezes se o cliente mandar várias mensagens seguidas.
+- [x] **Redirecionamento Humano:** Marca as conversas como "Não Lidas" automaticamente quando o cliente precisa falar com um atendente real.
+- [x] **Filtro de Mensagens Antigas:** Ignora mensagens recebidas enquanto o bot estava offline para não gerar respostas em massa.
 
-> *Legenda: [ ] Pronto | [x] Em desenvolvimento*
+> *Legenda: [x] Concluído | [ ] Em desenvolvimento*
 
 </details>
+
+<details open>
 <summary><strong>🛠️ Tecnologias Utilizadas</strong></summary>
 <br>
 
-* **Node.js:** Ambiente de execução.
-* **whatsapp-web.js:** Biblioteca para integração via Puppeteer (simula um navegador).
-* **Express:** Servidor para a API local e servir o painel de configuração HTML.
+* **Node.js:** Ambiente de execução principal.
+* **whatsapp-web.js:** Biblioteca baseada em Puppeteer para integração e automação do WhatsApp.
+* **Express:** Servidor para a API local e entrega do painel de configuração (Frontend).
 * **HTML5/CSS3:** Front-end do painel de controle.
 * **FS (File System):** Persistência de dados das configurações em JSON local.
+* **JSDoc:** Padronização de documentação para IntelliSense e tipagem no VS Code.
 
 </details>
 
 ---
 
-## Como Rodar o Projeto
+## 🚀 Como Rodar o Projeto
 
 Este projeto foi desenhado para ser seguro. Dados sensíveis (como a sessão do WhatsApp) não são versionados.
 
-<details>
+<details open>
 <summary><strong>Passo a Passo de Instalação</strong></summary>
 <br>
 
@@ -78,32 +84,35 @@ Este projeto foi desenhado para ser seguro. Dados sensíveis (como a sessão do 
 3.  **Configure o ambiente:**
     * Localize o arquivo `config.example.json` na raiz.
     * Renomeie-o para `config.json` (ou crie uma cópia com este nome).
-    * Este arquivo guardará as mensagens personalizadas da sua gráfica.
+    * Este arquivo guardará as mensagens personalizadas da gráfica.
 
 4.  **Inicie o Bot:**
     ```bash
     node index.js
     ```
     * O navegador abrirá automaticamente com o Painel de Configuração.
-    * No terminal, aparecerá um QR Code. Escaneie com o WhatsApp (Dispositivos Conectados).
+    * No terminal, aparecerá um QR Code. Escaneie-o usando o seu WhatsApp (Dispositivos Conectados).
+    * **Atenção:** Aguarde a mensagem `🚀 TUDO PRONTO! O Bot está conectado e aguardando mensagens` aparecer no terminal antes de enviar mensagens de teste.
 
 </details>
 
 ---
 
-## Aprendizados e Desafios
+## 🧠 Aprendizados e Desafios
 
-O desenvolvimento seguiu um fluxo de estudo prático:
+O desenvolvimento escalou de um arquivo simples para uma arquitetura robusta:
 
-1.  **Lógica Analógica:** Todo o fluxo de conversação e estados foi desenhado à mão antes da codificação, garantindo clareza na lógica de `switch/case` e `if/else`.
-2.  **Assincronicidade:** Uso intensivo de `async/await` para garantir que as mensagens cheguem na ordem correta, simulando uma digitação humana.
-3.  **Persistência JSON:** Manipulação de leitura e escrita de arquivos (`fs`) para criar um "banco de dados" leve e portátil para as configurações.
+1.  **Arquitetura Limpa e Modularização:** O código foi refatorado em serviços (`messageHandler`, `mainMenu`, `quote`, `otherOptions`) separando as responsabilidades (Single Responsibility Principle) para evitar arquivos gigantes e difíceis de dar manutenção.
+2.  **JSDoc e IntelliSense:** Uso de comentários JSDoc orientados a contrato para melhorar o autocompletar do VS Code sem poluir a lógica visual do código.
+3.  **Lógica Avançada de Switch/Case:** Utilização do agrupamento de casos (*Fall-through*) para delegar estágios complexos do carrinho de compras para classes especializadas de forma elegante.
+4.  **Lógica Analógica:** Todo o fluxo de conversação e estados foi desenhado à mão (fluxogramas) antes da codificação, garantindo clareza nas regras de negócio.
+5.  **Gerenciamento de Memória:** Implementação de limpeza de estados (`delete`) e finalização de Timers (`clearTimeout`) para evitar vazamento de memória e garantir que o bot rode liso em produção.
 
 ---
 
-## Licença
+## 📄 Licença
 
-Este projeto está sob a licença **MIT**. Sinta-se livre para usar, estudar e modificar.
+Este projeto está sob a licença **MIT**. Sinta-se livre para usar, estudar e modificar o código base.
 
 <div align="center">
   <sub>Desenvolvido com ☕ e código por <a href="https://www.linkedin.com/in/laylson-albuquerque/">Laylson Albuquerque</a></sub>
