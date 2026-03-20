@@ -24,16 +24,16 @@
 
 ---
 
-## 💡 Sobre o Projeto
+## Sobre o Projeto
 
 Este projeto nasceu da necessidade de automatizar o atendimento inicial de uma **Gráfica**, permitindo que o cliente consulte preços, horários, tire dúvidas e faça orçamentos de forma autônoma. 
 
 O diferencial técnico deste bot é a sua **independência de código para configuração**: foi desenvolvida uma interface Web local (Dashboard) onde o dono da gráfica pode alterar as mensagens de saudação, cardápio, produtos e horários de funcionamento sem precisar tocar em uma única linha de JavaScript.
 
-> **📌 Nota de Evolução Comercial:** Este repositório público documenta o protótipo funcional, a arquitetura base e as soluções algorítmicas do sistema. Devido ao potencial de mercado validado, a evolução contínua deste projeto para um produto comercial (SaaS) seguirá o seu desenvolvimento em um repositório privado.
+> ** Nota de Evolução Comercial:** Este repositório público documenta o protótipo funcional, a arquitetura base e as soluções algorítmicas do sistema. Devido ao potencial de mercado validado, a evolução contínua deste projeto para um produto comercial (SaaS) seguirá o seu desenvolvimento em um repositório privado.
 
 <details open>
-<summary><strong>✨ Funcionalidades</strong></summary>
+<summary><strong> Funcionalidades</strong></summary>
 <br>
 
 - [x] **Painel de Configuração Web:** Interface local (Express) para editar textos do bot dinamicamente.
@@ -63,7 +63,7 @@ O diferencial técnico deste bot é a sua **independência de código para confi
 
 ---
 
-## 🚀 Como Rodar o Projeto
+## Como Rodar o Projeto
 
 Este projeto foi desenhado para ser seguro. Dados sensíveis (como a sessão do WhatsApp) não são versionados.
 
@@ -98,7 +98,7 @@ Este projeto foi desenhado para ser seguro. Dados sensíveis (como a sessão do 
 
 ---
 
-## 🧠 Aprendizados e Desafios
+## Aprendizados e Desafios
 
 O desenvolvimento escalou de um arquivo simples para uma arquitetura robusta:
 
@@ -110,7 +110,7 @@ O desenvolvimento escalou de um arquivo simples para uma arquitetura robusta:
 
 ---
 
-## 📄 Licença
+## Licença
 
 Este projeto está sob a licença **MIT**. Sinta-se livre para usar, estudar e modificar o código base.
 
